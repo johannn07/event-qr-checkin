@@ -6,5 +6,6 @@ public record TicketResponse(
     String ticketCode,
     String fullName,
     String eventName,
-    OffsetDateTime startsAt
+    OffsetDateTime startsAt,
+    OffsetDateTime checkedInAt
 ) {}
