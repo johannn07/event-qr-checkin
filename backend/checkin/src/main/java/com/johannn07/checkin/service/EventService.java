@@ -33,7 +33,7 @@ public class EventService {
         return toResponse(event);
     }
 
-    EventResponse toResponse(Event event){
+    private EventResponse toResponse(Event event){
         long registered = registrationRepository.countByEventId(event.getId());
         long spotsLeft = Math.max(0, event.getCapacity() - registered);
         return new EventResponse(
