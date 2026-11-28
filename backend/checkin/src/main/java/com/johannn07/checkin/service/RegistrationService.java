@@ -1,11 +1,13 @@
 package com.johannn07.checkin.service;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.johannn07.checkin.dto.AttendeeResponse;
 import com.johannn07.checkin.dto.RegisterRequest;
 import com.johannn07.checkin.dto.TicketResponse;
 import com.johannn07.checkin.entity.Registration;
@@ -22,6 +24,40 @@ public class RegistrationService {
     public RegistrationService(EventRepository eventRepository, RegistrationRepository registrationRepository) {
         this.eventRepository = eventRepository;
         this.registrationRepository = registrationRepository;
+    }
+
+    @Transactional (readOnly = true)
+    public TicketResponse getTicket(String ticketCode) {
+        var registration = registrationRepository.findByTicketCode(ticketCode)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket with code: " + ticketCode + " not found"));
+        
+        var event = registration.getEvent();
+        
+        return new TicketResponse(
+            registration.getTicketCode(),
+            registration.getFullName(),
+            event.getName(),
+            event.getStartsAt(),
+            registration.getCheckedInAt()
+        );
+    }
+
+    @Transactional 
+    public List<AttendeeResponse> listAttendees(Long eventId) {
+        if (!eventRepository.existsById(eventId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Event with id: " + eventId + " not found");
+        }
+        
+        return registrationRepository.findByEventIdOrderByCreatedAtAsc(eventId).stream()
+            .map(registration -> new AttendeeResponse(
+                registration.getFullName(),
+                registration.getEmail(),
+                registration.getMobile(),
+                registration.getTicketCode(),
+                registration.getCheckedInAt(),
+                registration.getCreatedAt()
+            ))
+            .toList();
     }
 
     @Transactional
@@ -51,7 +87,8 @@ public class RegistrationService {
             registration.getTicketCode(),
             registration.getFullName(),
             event.getName(),
-            event.getStartsAt()
+            event.getStartsAt(),
+            null
         );
     }
 }
